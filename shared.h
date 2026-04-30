@@ -6,7 +6,7 @@
 
 void clear_screen();
 void set_up_sig_handler(void);
-
+bool quit_pressed(void);
 size_t get_terminal_width(void);
 
 #ifdef __linux__
@@ -23,6 +23,8 @@ size_t get_terminal_width(void);
     } while (0)
 
     void handle_signal(int signal);
+    void enable_raw_mode(void);
+    void disable_raw_mode(void);
     
 #else 
 

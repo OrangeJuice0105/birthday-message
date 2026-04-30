@@ -1,5 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 
+#include <stdio.h>
 #include "shared.h"
 
 #define DEFAULT_SIZE 80
@@ -7,7 +8,42 @@
 #ifdef __linux__
 
     #include <signal.h>
+    #include <unistd.h>
     #include <sys/ioctl.h>
+    #include <termios.h>
+    #include <sys/select.h>
+
+    static struct termios old_termios;
+
+    void enable_raw_mode(void) {
+        struct termios raw;
+        tcgetattr(STDIN_FILENO, &old_termios);
+        raw = old_termios;
+        raw.c_lflag &= ~(ICANON | ECHO);
+        tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+    }
+
+    void disable_raw_mode(void) {
+        tcsetattr(STDIN_FILENO, TCSANOW, &old_termios);
+    }
+
+    bool quit_pressed(void) {
+
+        struct timeval tv = {0, 0};
+        fd_set fds;
+
+        FD_ZERO(&fds);
+        FD_SET(STDIN_FILENO, &fds);
+
+        if (select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv) > 0) {
+            char c;
+            if (read(STDIN_FILENO, &c, 1) == 1) {
+                return c == 'q' || c == 'Q';
+            }
+        }
+
+        return false;
+    }
 
     void handle_signal(int signal) {
         if (signal == SIGINT) {
@@ -16,10 +52,8 @@
     }
 
     void clear_screen() {
-        system("clear");
+        puts("\033[H\033[J");
     }
-
-    
 
     void set_up_sig_handler() {
         struct sigaction action;
@@ -35,6 +69,17 @@
     }
     
 #else
+
+    #include <conio.h>
+
+    bool quit_pressed(void) {
+        if (_kbhit()) {
+            int c = _getch();
+            return c == 'q' || c == 'Q';
+        }
+
+        return false;
+    }
 
     void clear_screen() {
         system("cls");
