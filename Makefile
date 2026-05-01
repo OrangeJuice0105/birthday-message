@@ -1,10 +1,23 @@
-SOURCES = birthday.c shared.c
-HEADERS = *.h
+SOURCES := src/birthday.c src/shared.c
+HEADERS := src/*.h
 
-CFLAGS = -Wall -Wextra -Wpedantic -g
+CXX = gcc
+
+ifeq ($(OS),Windows_NT)
+OUTPUT := bin/birthday.exe
+RM := del /q /f
+else
+OUTPUT := bin/birthday
+RM := rm -f
+
+CFLAGS := -Wall -Wextra -Werror -Wpedantic -g
 
 all: $(SOURCES) $(HEADERS)
-	gcc ${CFLAGS} ${SOURCES} -o birthday
+	$(CXX) $(CFLAGS) $(SOURCES) -o $(OUTPUT)
 
+run:
+	./$(OUTPUT)
+
+.PHONY: clean
 clean: 
-	rm -f birthday
+	$(RM) $(OUTPUT)
