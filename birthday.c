@@ -9,9 +9,11 @@
 #include "banner.h"
 
 #define BIRTHDAY_MESSAGE "Happy birthday to you!"
-#define SHUTDOWN_MESSAGE "Happy birthday %s!"
+#define SHUTDOWN_MESSAGE_NAME "Happy birthday %s!"
+#define SHUTDOWN_MESSAGE_NORMAL "Happy birthday!"
 
 #define REFRESH_RATE 300
+#define MAX_SIZE 40
 
 volatile bool running = true;
 
@@ -61,12 +63,12 @@ void print_centered_banner(const char **lines, size_t count, size_t term_width) 
     }
 }
 
-void print_last_message() {
+void print_last_message(char *message) {
     puts(RESET);
     putchar('\n');
-    size_t length = strlen(SHUTDOWN_MESSAGE);
+    size_t length = strlen(message);
     for (size_t i = 0; i < length; i++) {
-        putchar(SHUTDOWN_MESSAGE[i]);
+        putchar(message[i]);
         fflush(stdout);
         SLEEP(REFRESH_RATE);
     }
@@ -75,6 +77,17 @@ void print_last_message() {
 }
 
 int main(int argc, const char *argv[]) {
+
+    char message[MAX_SIZE];
+    memset(message, 0, sizeof(message));
+
+    if (argc == 1) {
+        sprintf(message, SHUTDOWN_MESSAGE_NORMAL);
+    } else if (strcmp(argv[1], "self")) {
+        sprintf(message, SHUTDOWN_MESSAGE_NAME, "to me");
+    } else {
+        sprintf(message, SHUTDOWN_MESSAGE_NAME, argv[1]);
+    }
 
     int index = 0;
     set_up_sig_handler();
@@ -100,6 +113,6 @@ int main(int argc, const char *argv[]) {
             running = false;
         }
     }
-    print_last_message();
+    print_last_message(message);
     return EXIT_SUCCESS;
 }
